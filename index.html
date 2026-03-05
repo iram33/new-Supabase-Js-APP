@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Supabase Todo App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  </head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>My Todo App</h1>
+      <p class="subtitle">Simple, focused tasks — get things done.</p>
+    </header>
+
+    <main>
+      <form id="taskForm" class="task-form" onsubmit="event.preventDefault(); addTask();">
+        <input type="text" id="taskInput" placeholder="What do you want to do?" aria-label="New task">
+        <button id="addButton" class="primary" type="submit">Add</button>
+      </form>
+
+      <ul id="taskList" class="task-list"></ul>
+      <p id="emptyState" class="empty">No tasks yet — add one above.</p>
+    </main>
+
+    <!-- debug output area -->
+    <div id="debug" style="color:red; white-space:pre-wrap; margin-top:20px;"></div>
+
+    <footer class="footer">Powered by Supabase</footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
