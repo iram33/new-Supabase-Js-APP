@@ -1,22 +1,26 @@
 require('dotenv').config(); // 1. Load environment variables first
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
-const cors = require('cors');
+require('dotenv').config();
 
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
 app.use(express.json());
+app.use(require('cors')({
+  origin: ['http://localhost:3002', 'http://127.0.0.1:3002'],
+  credentials: true
+}));
 
-// 2. Supabase configuration using Environment Variables
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+// Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-// Initialize Supabase client
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+console.log(' Supabase URL:', process.env.SUPABASE_URL);
+console.log(' Supabase connected:', !!supabase);
 
 // Middleware to check Supabase connection
 app.use((req, res, next) => {
@@ -163,7 +167,7 @@ app.use((err, req, res, next) => {
 });
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 

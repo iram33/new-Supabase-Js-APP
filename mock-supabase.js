@@ -15,12 +15,24 @@ let nextId = 3;
 
 // RESTful endpoints mimicking Supabase
 app.post('/rest/v1/todos', (req, res) => {
+  console.log('Mock Supabase: POST request body:', req.body);
+  
+  // Handle Supabase client format which sends an array
+  let taskData;
+  if (Array.isArray(req.body) && req.body.length > 0) {
+    taskData = req.body[0];
+  } else {
+    taskData = req.body;
+  }
+  
   const newTodo = { 
-    ...req.body, 
+    ...taskData, 
     id: nextId++, 
     created_at: new Date().toISOString() 
   };
+  
   todos.push(newTodo);
+  console.log('Mock Supabase: Created new todo:', newTodo);
   res.json(newTodo);
 });
 
