@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo Database Viewer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .api-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        .task-list {
+            margin-top: 20px;
+        }
+        .task-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+        .task-id {
+            font-weight: bold;
+            color: #2196f3;
+        }
+        .task-text {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .task-meta {
+            font-size: 12px;
+            color: #666;
+        }
+        .refresh-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f44336;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+        .add-task-form {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .add-task-form input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 300px;
+        }
+        .add-task-form button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗃️ Todo Database Viewer</h1>
+        
+        <div class="api-info">
+            <strong>Current API Endpoint:</strong><br>
+            <code id="api-url">http://localhost:54321/rest/v1/todos</code><br>
+            <small>This is your Mock Supabase server. For real Supabase, update the URL below.</small>
+        </div>
+
+        <div class="add-task-form">
+            <h3>Add New Task</h3>
+            <input type="text" id="new-task-input" placeholder="Enter task text...">
+            <button onclick="addTask()">Add Task</button>
+        </div>
+
+        <button class="refresh-btn" onclick="loadTasks()">🔄 Refresh Tasks</button>
+        
+        <div id="status" class="loading">Loading tasks...</div>
+        <div id="tasks" class="task-list"></div>
+    </div>
+
+    <script>
+        // Current API URL (change this for real Supabase)
+        let API_URL = 'http://localhost:54321/rest/v1/todos';
+        
+        // For real Supabase, uncomment and update:
+        // let API_URL = 'https://your-project.supabase.co/rest/v1/todos';
+        // Add headers for real Supabase:
+        // let headers = {
+        //     'apikey': 'your-anon-key',
+        //     'Authorization': 'Bearer your-anon-key'
+        // };
+
+        async function loadTasks() {
+            const statusDiv = document.getElementById('status');
+            const tasksDiv = document.getElementById('tasks');
+            
+            try {
+                statusDiv.innerHTML = '<div class="loading">Loading tasks...</div>';
+                
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const tasks = await response.json();
+                
+                statusDiv.innerHTML = `✅ Found ${tasks.length} tasks`;
+                
+                if (tasks.length === 0) {
+                    tasksDiv.innerHTML = '<p style="text-align: center; color: #666;">No tasks found. Add one above!</p>';
+                    return;
+                }
+                
+                tasksDiv.innerHTML = tasks.map(task => `
+                    <div class="task-item">
+                        <div class="task-id">ID: ${task.id}</div>
+                        <div class="task-text">${task.task}</div>
+                        <div class="task-meta">
+                            Completed: ${task.completed || false} | 
+                            Created: ${new Date(task.created_at).toLocaleString()}
+                        </div>
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                tasksDiv.innerHTML = '';
+            }
+        }
+
+        async function addTask() {
+            const input = document.getElementById('new-task-input');
+            const taskText = input.value.trim();
+            
+            if (!taskText) {
+                alert('Please enter a task!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Add headers for real Supabase:
+                        // 'apikey': 'your-anon-key',
+                        // 'Authorization': 'Bearer your-anon-key'
+                    },
+                    body: JSON.stringify([{ task: taskText }])
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                input.value = '';
+                loadTasks(); // Refresh the list
+                
+            } catch (error) {
+                alert(`Error adding task: ${error.message}`);
+            }
+        }
+
+        async function deleteTask(taskId) {
+            if (!confirm('Delete this task?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}?id=eq.${taskId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                loadTasks(); // Refresh the list
+                
+            } catch (error) {
+                alert(`Error deleting task: ${error.message}`);
+            }
+        }
+
+        // Allow Enter key to add task
+        document.getElementById('new-task-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Load tasks on page load
+        loadTasks();
+    </script>
+</body>
+</html>
